@@ -4,7 +4,7 @@ import { countries } from "../lib/countries"; // Array of { flag, language, lang
 import { useChatStore } from "../store/useChatStore.js";
 
 export default function LanguageSelector() {
-  const { selectedUser } = useChatStore(); // Reciever
+  const { selectedUser , chatPreferences , selectedLanguage } = useChatStore(); // Reciever
   const [isOpen, setIsOpen] = useState(false);
 
   const defaultLang = countries.find((c) => c.flag === "us") || countries[0];
@@ -14,14 +14,7 @@ export default function LanguageSelector() {
     setCurrLang(langObj);
     setIsOpen(false);
     try {
-      await axios.put("http://localhost:5001/api/chat-preferences", {
-        partnerId: selectedUser._id,
-        preferredLanguage: langObj.isoCode,
-      },{
-        withCredentials: true,
-      });
-
-      console.log("Language preference updated!");
+      chatPreferences(selectedUser._id , langObj.language , langObj.flag , langObj.isoCode)
     } catch (error) {
       console.error("Failed to update language", error);
     }
@@ -37,12 +30,13 @@ export default function LanguageSelector() {
         className="w-full px-4 py-2 border rounded flex items-center justify-between bg-base-100"
       >
         <div className="flex items-center gap-2">
+          {selectedLanguage ? 
           <img
-            src={`https://flagcdn.com/16x12/${currLang.flag}.png`}
-            alt={currLang.language}
+            src={`https://flagcdn.com/16x12/${selectedLanguage.flag}.png`}
+            alt={selectedLanguage.language}
             className="w-5 h-4 object-cover rounded-sm"
-          />
-          <span>{currLang.language}</span>
+          />: ""}
+          <span>{selectedLanguage ? selectedLanguage.language:"Select Language"}</span>
         </div>
         <span>▾</span>
       </button>

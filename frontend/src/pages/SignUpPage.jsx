@@ -14,10 +14,7 @@ const SignUpPage = () => {
     fullName: "",
     email: "",
     password: "",
-    username: "",
-    languageName: "English",
-    flag: "us",
-    language: "en", // default lang
+    username: ""
   });
 
 
@@ -144,48 +141,6 @@ const SignUpPage = () => {
                 </button>
               </div>
             </div>
-            <div className="form-control">
-            <div className="relative w-full">
-      <label className="label font-medium mb-1">Preferred Language</label>
-      <button
-        type="button"
-        onClick={() => setIsOpen(!isOpen)}
-        className="w-full px-4 py-2 border rounded flex items-center justify-between bg-base-100"
-      >
-        <div className="flex items-center gap-2">
-          <img
-            src={`https://flagcdn.com/16x12/${formData.flag}.png`}
-            alt={formData.language}
-            className="w-5 h-4 object-cover rounded-sm"
-          />
-          <span>{formData.languageName}</span>
-        </div>
-        <span>▾</span>
-      </button>
-
-      {isOpen && (
-        <ul className="absolute z-10 mt-1 w-full bg-white border rounded shadow max-h-60 overflow-y-auto">
-          {countries.map((lang) => (
-            <li
-              key={lang.flag}
-              className="px-4 py-2 hover:bg-gray-100 cursor-pointer flex items-center gap-2"
-              onClick={() => {
-                setFormData({ ...formData, language: lang.isoCode, languageName: lang.language, flag: lang.flag});
-                setIsOpen(false);
-              }}
-            >
-              <img
-                src={`https://flagcdn.com/16x12/${lang.flag}.png`}
-                alt={lang.name}
-                className="w-5 h-4 object-cover rounded-sm"
-              />
-              <span>{lang.language}</span>
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
-</div>
 
             <button type="submit" className="btn btn-primary w-full" disabled={isSigningUp}>
               {isSigningUp ? (
