@@ -2,7 +2,7 @@ import User from "../models/user.model.js";
 import Message from "../models/message.model.js";
 import UserChatPreference from "../models/userChatPreference.model.js";
 
-import cloudinary from "../lib/cloudinary.js";
+import { uploadMedia } from "../lib/cloudinary.js";
 import { getReceiverSocketId, io } from "../lib/socket.js";
 
 export const getUsersForSidebar = async (req, res) => {
@@ -22,6 +22,10 @@ export const getMessages = async (req, res) => {
     const { id: userToChatId } = req.params;
     const myId = req.user._id;
 
+    let chatPreference = await UserChatPreference.findOne({
+      senderId:myId , receiverId:userToChatId
+    })
+
     const messages = await Message.find({
       $or: [
         { senderId: myId, receiverId: userToChatId },
@@ -29,12 +33,17 @@ export const getMessages = async (req, res) => {
       ],
     });
 
-    res.status(200).json(messages);
+    if(!chatPreference){
+    res.status(200).json({messages , language:null});
+    }else{
+    res.status(200).json({messages , language:chatPreference.preferredLanguage});
+    }
   } catch (error) {
     console.log("Error in getMessages controller: ", error.message);
     res.status(500).json({ error: "Internal server error" });
   }
 };
+
 
 export const sendMessage = async (req, res) => {
   try {
@@ -45,10 +54,9 @@ export const sendMessage = async (req, res) => {
     let imageUrl;
     if (image) {
       // Upload base64 image to cloudinary
-      const uploadResponse = await cloudinary.uploader.upload(image);
+      const uploadResponse = await uploadMedia(image);
       imageUrl = uploadResponse.secure_url;
     }
-    console.log(text)
 
     const newMessage = new Message({
       senderId,
@@ -61,29 +69,29 @@ export const sendMessage = async (req, res) => {
 
     // ✅ Create chat preference only if it doesn't already exist
     const existingPref = await UserChatPreference.findOne({
-      userId: senderId,
-      partnerId: receiverId,
+      senderId: senderId,
+      receiverId: receiverId,
     });
 
     if (!existingPref) {
       await UserChatPreference.create({
-        userId: senderId,
-        partnerId: receiverId,
-        preferredLanguage: "",
+        senderId: senderId,
+        receiverId: receiverId,
+        preferredLanguage: null,
       });
     }
 
     // ✅ Optional reverse (for receiver)
     const reversePref = await UserChatPreference.findOne({
-      userId: receiverId,
-      partnerId: senderId,
+      senderId: receiverId,
+      receiverId: senderId,
     });
 
     if (!reversePref) {
       await UserChatPreference.create({
-        userId: receiverId,
-        partnerId: senderId,
-        preferredLanguage: "",
+        senderId: receiverId,
+        receiverId: senderId,
+        preferredLanguage: null,
       });
     }
 
