@@ -9,6 +9,7 @@ export const useChatStore = create((set, get) => ({
   selectedUser: null,
   isUsersLoading: false,
   isMessagesLoading: false,
+  selectedLanguage:null,
 
   getUsers: async () => {
     set({ isUsersLoading: true });
@@ -22,11 +23,20 @@ export const useChatStore = create((set, get) => ({
     }
   },
 
+  chatPreferences: async (receiverId , language , flag , isoCode) => {
+    try {
+      const res = await axiosInstance.put("/chat-preferences",{receiverId , language , flag , isoCode})
+      set({selectedLanguage:res.data.data})
+    } catch (error) {
+      toast.error(error.response.data.message);
+    }
+  },
+
   getMessages: async (userId) => {
     set({ isMessagesLoading: true });
     try {
       const res = await axiosInstance.get(`/messages/${userId}`);
-      set({ messages: res.data });
+      set({ messages: res.data.messages , selectedLanguage:res.data.language });
     } catch (error) {
       toast.error(error.response.data.message);
     } finally {
