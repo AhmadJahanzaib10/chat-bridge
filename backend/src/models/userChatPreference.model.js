@@ -1,26 +1,30 @@
 import mongoose from "mongoose";
 
+const preferredLanguageSchema = new mongoose.Schema({
+  language: String,
+  flag: String,
+  isoCode: String
+})
+
 const userChatPreferenceSchema = new mongoose.Schema(
   {
-    userId: {
+    senderId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
     },
-    partnerId: {
+    receiverId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
     },
-    preferredLanguage: {
-      type: String,
-    },
+    preferredLanguage: preferredLanguageSchema
   },
   { timestamps: true }
 );
 
 // Ensure no duplicate user-partner pairs
-userChatPreferenceSchema.index({ userId: 1, partnerId: 1 }, { unique: true });
+userChatPreferenceSchema.index({ senderId: 1, receiverId: 1 }, { unique: true });
 
 const UserChatPreference = mongoose.model("UserChatPreference", userChatPreferenceSchema);
 

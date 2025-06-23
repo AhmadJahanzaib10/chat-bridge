@@ -2,30 +2,48 @@ import UserChatPreference from "../models/userChatPreference.model.js";
 
 export const updatePreferredLanguage = async (req, res) => {
   try {
-    const userId = req.user._id; // from auth middleware
-    const { partnerId, preferredLanguage } = req.body;
-    console.log(userId, partnerId, preferredLanguage)
-
-    if (!partnerId || !preferredLanguage) {
-      return res.status(400).json({ error: "partnerId and preferredLanguage are required." });
+    // ✅ Check if user is authenticated
+    if (!req.user || !req.user._id) {
+      return res.status(401).json({ error: "Unauthorized. User not found." });
     }
 
-    const updatedPref = await UserChatPreference.findOneAndUpdate(
-      { userId, partnerId },
-      { preferredLanguage },
-      { new: true }
-    );
+    const userId = req.user._id;
+    const { receiverId, language, flag, isoCode } = req.body;
+
+    // ✅ Validate inputs
+    if (!receiverId || !language || !flag || !isoCode) {
+      return res.status(400).json({ error: "receiverId, language, flag, and isoCode are required." });
+    }
+
+    const preferredLanguage = { language, flag, isoCode };
+
+    // ✅ Check for existing chat preference
+    let updatedPref = await UserChatPreference.findOne({ senderId: userId, receiverId:receiverId });
+    
 
     if (!updatedPref) {
-      return res.status(404).json({ error: "Chat preference not found." });
+      // ✅ Create if not exists
+      updatedPref = await UserChatPreference.create({
+        senderId: userId,
+        receiverId:receiverId,
+        preferredLanguage:preferredLanguage,
+      });
+    } else {
+      // ✅ Update if exists
+      updatedPref = await UserChatPreference.findOneAndUpdate(
+        { senderId: userId, receiverId },
+        { $set: { preferredLanguage } },
+        { new: true }
+      );
     }
 
     res.status(200).json({
       message: "Preferred language updated successfully.",
-      data: updatedPref,
+      data: updatedPref.preferredLanguage,
     });
+
   } catch (error) {
-    console.error("Error in updatePreferredLanguage:", error.message);
+    console.error("Error in updatePreferredLanguage:", error);
     res.status(500).json({ error: "Internal server error." });
   }
 };

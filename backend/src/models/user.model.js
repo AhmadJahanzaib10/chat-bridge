@@ -30,22 +30,7 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
-    languageName: {
-      type: String,
-      default: "",
-      require: true,
-    },
-    languageISOCode: {
-      type: String,
-      default: "",
-      require: true,
-    },
-    flag: {
-      type: String,
-      default: "",
-      require: true,
-    },
-
+    profilePicId:String
   },
   { timestamps: true }
 );

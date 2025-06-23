@@ -1,12 +1,12 @@
 import { generateToken } from "../lib/utils.js";
 import User from "../models/user.model.js";
 import bcrypt from "bcryptjs";
-import cloudinary from "../lib/cloudinary.js";
+import { uploadMedia, deleteMediaFromCloudinary } from "../lib/cloudinary.js";
 
 export const signup = async (req, res) => {
-  const { fullName,username, email, password, languageName, language, flag } = req.body;
+  const { fullName, username, email, password } = req.body;
   try {
-    if (!fullName || !email || !password || !username || !languageName || !language) {
+    if (!fullName || !email || !password || !username) {
       return res.status(400).json({ message: "All fields are required" });
     }
 
@@ -26,9 +26,6 @@ export const signup = async (req, res) => {
       username,
       email,
       password: hashedPassword,
-      flag,
-      languageISOCode: language,
-      languageName,
     });
 
     if (newUser) {
@@ -99,10 +96,15 @@ export const updateProfile = async (req, res) => {
       return res.status(400).json({ message: "Profile pic is required" });
     }
 
-    const uploadResponse = await cloudinary.uploader.upload(profilePic);
+    const user = await User.findById(userId)
+    if (user.profilePicId) {
+      await deleteMediaFromCloudinary(user.profilePicId)
+    }
+
+    const uploadResponse = await uploadMedia(profilePic);
     const updatedUser = await User.findByIdAndUpdate(
       userId,
-      { profilePic: uploadResponse.secure_url },
+      { profilePic: uploadResponse.secure_url, profilePicId: uploadResponse.public_id },
       { new: true }
     );
 
