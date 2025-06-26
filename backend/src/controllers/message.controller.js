@@ -88,7 +88,7 @@ export const sendMessage = async (req, res) => {
     }
 
     let translatedText;
-    if(reversePref.preferredLanguage && reversePref?.preferredLanguage?.language !== existingPref?.preferredLanguage?.language){
+    if(reversePref?.preferredLanguage && reversePref?.preferredLanguage?.language !== existingPref?.preferredLanguage?.language){
       translatedText = await translate(text,reversePref.preferredLanguage.isoCode)
     }
 
