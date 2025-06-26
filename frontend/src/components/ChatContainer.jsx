@@ -33,6 +33,7 @@ const ChatContainer = () => {
     }
   }, [messages]);
 
+
   if (isMessagesLoading) {
     return (
       <div className="flex-1 flex flex-col overflow-auto">
@@ -79,7 +80,7 @@ const ChatContainer = () => {
                   className="sm:max-w-[200px] rounded-md mb-2"
                 />
               )}
-              {message.originalText && <p>{message.originalText}</p>}
+              { (message.senderId !== authUser?._id  && message.translatedText) ? <p>{message.translatedText}</p> : <p>{message.originalText}</p> }
             </div>
           </div>
         ))}

@@ -4,6 +4,7 @@ import UserChatPreference from "../models/userChatPreference.model.js";
 
 import { uploadMedia } from "../lib/cloudinary.js";
 import { getReceiverSocketId, io } from "../lib/socket.js";
+import { translate } from "../lib/deepl.js";
 
 export const getUsersForSidebar = async (req, res) => {
   try {
@@ -53,19 +54,10 @@ export const sendMessage = async (req, res) => {
 
     let imageUrl;
     if (image) {
-      // Upload base64 image to cloudinary
       const uploadResponse = await uploadMedia(image);
       imageUrl = uploadResponse.secure_url;
     }
 
-    const newMessage = new Message({
-      senderId,
-      receiverId,
-      originalText: text,
-      image: imageUrl,
-    });
-
-    await newMessage.save();
 
     // ✅ Create chat preference only if it doesn't already exist
     const existingPref = await UserChatPreference.findOne({
@@ -94,6 +86,33 @@ export const sendMessage = async (req, res) => {
         preferredLanguage: null,
       });
     }
+
+    let translatedText;
+    if(reversePref.preferredLanguage && reversePref?.preferredLanguage?.language !== existingPref?.preferredLanguage?.language){
+      translatedText = await translate(text,reversePref.preferredLanguage.isoCode)
+    }
+
+    let newMessage;
+    if(translatedText){
+      newMessage = new Message({
+      senderId,
+      receiverId,
+      originalText: text,
+      translatedText:translatedText.text,
+      image: imageUrl,
+    });
+    }
+    else{
+      newMessage = new Message({
+      senderId,
+      receiverId,
+      originalText: text,
+      image: imageUrl,
+    });
+    }
+    
+
+    await newMessage.save();
 
     const receiverSocketId = getReceiverSocketId(receiverId);
     if (receiverSocketId) {
