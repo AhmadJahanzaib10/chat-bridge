@@ -2,9 +2,10 @@ import React, { useState } from "react";
 import axios from "axios";
 import { countries } from "../lib/countries"; // Array of { flag, language, lang }
 import { useChatStore } from "../store/useChatStore.js";
+import toast from "react-hot-toast";
 
 export default function LanguageSelector() {
-  const { selectedUser , chatPreferences , selectedLanguage } = useChatStore(); // Reciever
+  const { selectedUser , chatPreferences , selectedLanguage , translateAllMessages } = useChatStore(); // Reciever
   const [isOpen, setIsOpen] = useState(false);
 
   const defaultLang = countries.find((c) => c.flag === "us") || countries[0];
@@ -19,6 +20,17 @@ export default function LanguageSelector() {
       console.error("Failed to update language", error);
     }
   };
+
+  const handleTranslateAll = async()=>{
+    try {
+      if(!currLang){
+        toast.error("Select a language first.")
+      }
+      translateAllMessages(selectedUser._id)
+    } catch (error) {
+      console.error("Failed to update language", error);
+    }
+  }
 
   return (
     <div className="relative w-full max-w-sm pt-2">
@@ -59,6 +71,8 @@ export default function LanguageSelector() {
           ))}
         </ul>
       )}
+
+      <button className="mt-3 bg-gray-800 w-full h-10 rounded-md text-white hover:opacity-85 select-none" onClick={handleTranslateAll}>Translate all messages</button>
     </div>
   );
 }

@@ -20,24 +20,24 @@ export const getUsersForSidebar = async (req, res) => {
 
 export const getMessages = async (req, res) => {
   try {
-    const { id: userToChatId } = req.params;
-    const myId = req.user._id;
+    const { id: receiverId } = req.params;
+    const senderId = req.user._id;
 
     let chatPreference = await UserChatPreference.findOne({
-      senderId:myId , receiverId:userToChatId
+      senderId: senderId, receiverId: receiverId
     })
 
     const messages = await Message.find({
       $or: [
-        { senderId: myId, receiverId: userToChatId },
-        { senderId: userToChatId, receiverId: myId },
+        { senderId: senderId, receiverId: receiverId },
+        { senderId: receiverId, receiverId: senderId },
       ],
     });
 
-    if(!chatPreference){
-    res.status(200).json({messages , language:null});
-    }else{
-    res.status(200).json({messages , language:chatPreference.preferredLanguage});
+    if (!chatPreference) {
+      res.status(200).json({ messages, language: null });
+    } else {
+      res.status(200).json({ messages, language: chatPreference.preferredLanguage });
     }
   } catch (error) {
     console.log("Error in getMessages controller: ", error.message);
@@ -88,29 +88,30 @@ export const sendMessage = async (req, res) => {
     }
 
     let translatedText;
-    if(reversePref?.preferredLanguage && reversePref?.preferredLanguage?.language !== existingPref?.preferredLanguage?.language){
-      translatedText = await translate(text,reversePref.preferredLanguage.isoCode)
+    if (reversePref?.preferredLanguage) {
+      translatedText = await translate(text, reversePref.preferredLanguage.isoCode)
     }
 
     let newMessage;
-    if(translatedText){
+    if (translatedText) {
       newMessage = new Message({
-      senderId,
-      receiverId,
-      originalText: text,
-      translatedText:translatedText.text,
-      image: imageUrl,
-    });
+        senderId,
+        receiverId,
+        originalText: text,
+        translatedText: translatedText.text,
+        image: imageUrl,
+        translatedTo: reversePref?.preferredLanguage?.isoCode,
+      });
     }
-    else{
+    else {
       newMessage = new Message({
-      senderId,
-      receiverId,
-      originalText: text,
-      image: imageUrl,
-    });
+        senderId,
+        receiverId,
+        originalText: text,
+        image: imageUrl,
+      });
     }
-    
+
 
     await newMessage.save();
 
@@ -121,7 +122,53 @@ export const sendMessage = async (req, res) => {
 
     res.status(201).json(newMessage);
   } catch (error) {
-    console.log("Error in sendMessage controller: ", error.message);
     res.status(500).json({ error: "Internal server error" });
   }
 };
+
+
+export const translateAllmessages = async (req, res) => {
+  try {
+    const receiverId = req.params.id
+    const senderId = req.user?._id
+
+    let chatPreference = await UserChatPreference.findOne({
+      senderId: senderId, receiverId: receiverId
+    })
+
+    const messages = await Message.find({
+      $or: [
+        { senderId: receiverId, receiverId: senderId },
+      ],
+    });
+
+    if (!chatPreference?.preferredLanguage) {
+      res.status(401).json({ error: "Select a language first." })
+    }
+
+    await Promise.all(
+      messages.map(async (message) => {
+        if (message?.translatedTo === chatPreference?.preferredLanguage?.isoCode) {
+          return;
+        }
+        const translatedText = await translate(message.originalText, chatPreference?.preferredLanguage?.isoCode);
+        await Message.findByIdAndUpdate(message._id, {
+          translatedText: translatedText.text,
+          translatedTo: chatPreference.preferredLanguage.isoCode
+        });
+      })
+    );
+
+    const translatedMessages = await Message.find({
+      $or: [
+        { senderId: senderId, receiverId: receiverId },
+        { senderId: receiverId, receiverId: senderId },
+      ],
+    });
+
+    res.status(201).json({ translatedMessages });;
+
+  } catch (error) {
+    res.status(500).json({ error: "Internal server error" });
+  }
+}
