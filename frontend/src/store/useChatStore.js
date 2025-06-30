@@ -44,6 +44,21 @@ export const useChatStore = create((set, get) => ({
       set({ isMessagesLoading: false });
     }
   },
+
+    translateAllMessages : async (userId)=>{
+      set({ isMessagesLoading: true });
+      try {
+        const res = await axiosInstance.put(`/messages/translateAll/${userId}`);
+        set(()=>({
+          messages:res.data.translatedMessages.map((msg)=>({...msg}))
+        }))
+      } catch (error) {
+        toast.error(error.response.data.message);
+      } finally {
+        set({ isMessagesLoading: false });
+      }
+    },
+
   sendMessage: async (messageData) => {
     const { selectedUser, messages } = get();
     set({ isMessageSending: true });
@@ -80,3 +95,4 @@ export const useChatStore = create((set, get) => ({
 
   setSelectedUser: (selectedUser) => set({ selectedUser }),
 }));
+
