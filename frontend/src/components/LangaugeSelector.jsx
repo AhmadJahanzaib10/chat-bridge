@@ -3,8 +3,10 @@ import axios from "axios";
 import { countries } from "../lib/countries"; // Array of { flag, language, lang }
 import { useChatStore } from "../store/useChatStore.js";
 import toast from "react-hot-toast";
+import {ArrowRightFromLine} from "lucide-react"
 
-export default function LanguageSelector() {
+
+export default function LanguageSelector({barOpen, setBarOpen}) {
   const { selectedUser , chatPreferences , selectedLanguage , translateAllMessages } = useChatStore(); // Reciever
   const [isOpen, setIsOpen] = useState(false);
 
@@ -32,8 +34,15 @@ export default function LanguageSelector() {
     }
   }
 
+  const handlePrefSiderBar = () =>{
+    setBarOpen(false)
+  }
+
   return (
-    <div className="relative w-full max-w-sm pt-2">
+    <div className={`relative language-selector ${barOpen ? "show" : "hide"} w-1/4 max-w-sm pt-2 px-5`}>
+      <div className="flex mb-5 mt-3">
+      <ArrowRightFromLine className="cursor-pointer xl:hidden" onClick={handlePrefSiderBar}/>
+      </div>
       <label className="block mb-2 font-medium">Preferred Chat Language</label>
 
       <button

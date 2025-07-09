@@ -6,8 +6,9 @@ import MessageInput from "./MessageInput";
 import MessageSkeleton from "./skeletons/MessageSkeleton";
 import { useAuthStore } from "../store/useAuthStore";
 import { formatMessageTime } from "../lib/utils";
+import {Settings2} from "lucide-react"
 
-const ChatContainer = () => {
+const ChatContainer = ({barOpen, setBarOpen}) => {
   const {
     messages,
     getMessages,
@@ -44,8 +45,15 @@ const ChatContainer = () => {
     );
   }
 
+  const handlePreferenceSideBar = ()=>{
+    setBarOpen(true)
+  }
+
   return (
     <div className="flex-1 flex flex-col overflow-auto">
+      <div className="flex justify-end xl:hidden">
+        <button className="flex gap-2 pt-2 pr-2" onClick={handlePreferenceSideBar}><Settings2 /> Preference</button>
+      </div>
       <ChatHeader />
 
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
